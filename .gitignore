@@ -102,3 +102,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+similarities.csv
+.ipynb_checkpoints
+ml-100k
+movie-similarities.py
+movie-similarities-1m.py
