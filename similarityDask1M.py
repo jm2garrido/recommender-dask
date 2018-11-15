@@ -43,7 +43,7 @@ def computeMoviePairSimilarities(fileName):
     sw = stopWatch()
     
     df = dd.read_table(fileName,names = ["userID","movieID","rating","_"],usecols = ["userID","movieID","rating"],
-                    dtype = {"rating":np.float64}).set_index("userID")
+                    dtype = {"rating":np.float64},sep="::").set_index("userID")
     
     sw.printTime("after read_table")
     df.info()
@@ -87,15 +87,15 @@ if __name__ == "__main__":
     client = Client(processes=False)
     print(client)
     
-    fileRatings = "ml-100k/u.data"
-    fileNames = "ml-100k/u.item"
+    fileRatings = "ml-1m/ratings.dat"
+    fileNames = "ml-1m/movies.dat"
     
     moviePairSimilarities = computeMoviePairSimilarities(fileRatings)
     
     #moviePairSimilarities.to_cvs("similarities.json")
     
     movieNames = pd.read_table(fileNames,names = ["movieID","title"],usecols = ["movieID","title"],
-                        sep ="|",index_col = "movieID", encoding = "cp1252")
+                        sep ="::",index_col = "movieID", encoding = "cp1252")
     movieNames.head()
     
     movieID = 50
