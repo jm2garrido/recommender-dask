@@ -32,7 +32,7 @@ class stopWatch():
     
     def printTime(self, msg):
         t1 = time.perf_counter()
-        print("{:5.2} at {}".format(t1-self.t_value,msg))
+        print("{:5.2f} at {}".format(t1-self.t_value,msg))
         self.t_value = t1    
 
 def computeMoviePairSimilarities(fileName):

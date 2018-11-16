@@ -5,8 +5,6 @@ import pandas as pd
 import numpy as np
 from math import sqrt
 import time
-import dask.dataframe as dd
-from dask.distributed import Client
 
 def computeCosineSimilarity(ratingPairs):
     x = ratingPairs["rating_1"]
@@ -34,7 +32,7 @@ class stopWatch():
     
     def printTime(self, msg):
         t1 = time.perf_counter()
-        print("\n{:5.2f} at {}".format(t1-self.t_value,msg))
+        print("{:5.2f} at {}".format(t1-self.t_value,msg))
         self.t_value = t1    
 
 def computeMoviePairSimilarities(fileName):
@@ -42,8 +40,8 @@ def computeMoviePairSimilarities(fileName):
     
     sw = stopWatch()
     
-    df = dd.read_table(fileName,names = ["userID","movieID","rating","_"],usecols = ["userID","movieID","rating"],
-                    dtype = {"rating":np.float64}, sep ="::",engine="python").set_index("userID")
+    df = pd.read_table(fileName, names = ["userID","movieID","rating","_"],usecols = ["userID","movieID","rating"],
+                        dtype = {"rating":np.float64},index_col = "userID")
     
     sw.printTime("after read_table")
     df.info()
@@ -62,23 +60,22 @@ def computeMoviePairSimilarities(fileName):
 
     
     #moviePairs
-    df = df.set_index("movieID_1")
-
+    df = df.set_index(["movieID_1","movieID_2"])
+    
     #some operation for preparing the cosineSimilarity
     df["rating_xy"] = df["rating_1"] * df["rating_2"]
     df["rating_xx"] = df["rating_1"] * df["rating_1"]
-    df = df.drop("rating_1", axis = 1)
+    df.drop(columns="rating_1",inplace=True)
     df["rating_yy"] = df["rating_2"] * df["rating_2"]
-    df = df.drop("rating_2", axis = 1)
+    df.drop(columns="rating_2",inplace=True)
         
     sw.printTime("after squaring")
-    df.info()
-
+    
     #moviePairRatings
     df = df.groupby(["movieID_1","movieID_2"])
     
     sw.printTime("after groupby")    
-
+    
     totals = df["rating_xy"].count()
     #print(totals.head())
     
@@ -89,48 +86,40 @@ def computeMoviePairSimilarities(fileName):
     df = df.sum()
     
     df["score"] = df["rating_xy"] / (df["rating_xx"].pow(0.5) * df["rating_yy"].pow(0.5) )
-    df = df.drop(["rating_xy","rating_xx","rating_yy"], axis = 1)
+    df.drop(columns=["rating_xy","rating_xx","rating_yy"],inplace=True)
     
     df["numPairs"] = totals
     
     sw.printTime("after cosineSimilarity")
-    
-    df = df.compute()
-    sw.printTime("after compute")
+    #print(df.head())
     df.info()
     
     return df
 
 
 #Main
-if __name__ == "__main__":
-    client = Client(processes=False)
-    print(client)
-    
-    fileRatings = "ml-1m/ratings.dat"
-    fileNames = "ml-1m/movies.dat"
-    
-    moviePairSimilarities = computeMoviePairSimilarities(fileRatings)
-    
-    #moviePairSimilarities.to_cvs("similarities.json")
-    
-    movieNames = pd.read_table(fileNames,names = ["movieID","title"],usecols = ["movieID","title"],
-                        sep ="::",index_col = "movieID", encoding = "cp1252")
-    movieNames.head()
-    
-    movieID = 50
-    scoreThreshold = 0.97
-    coOccurenceThreshold = 50
-    
-    filteredResults = moviePairSimilarities.query(
-        "((movieID_1 == @movieID) or (movieID_1 == @movieID)) and (score>@scoreThreshold) and (numPairs>@coOccurenceThreshold)"
-        ).sort_values(by="score",ascending=False).head(10) 
-    
-    
-    for i,v in filteredResults.iterrows():
-        if i[0] == movieID:
-            recommended = i[1]
-        else:
-            recommended = i[0]
-        nR = movieNames.loc[recommended,"title"]
-        print(nR,v["score"])
+
+moviePairSimilarities = computeMoviePairSimilarities("ml-100k/u.data")
+
+#moviePairSimilarities.to_cvs("similarities.json")
+
+movieNames = pd.read_table("ml-100k/u.item",names = ["movieID","title"],usecols = ["movieID","title"],
+                    sep ="|",index_col = "movieID", encoding = "cp1252")
+movieNames.head()
+
+movieID = 50
+scoreThreshold = 0.97
+coOccurenceThreshold = 50
+
+filteredResults = moviePairSimilarities.query(
+    "((movieID_1 == @movieID) or (movieID_1 == @movieID)) and (score>@scoreThreshold) and (numPairs>@coOccurenceThreshold)"
+    ).sort_values(by="score",ascending=False).head(10) 
+
+
+for i,v in filteredResults.iterrows():
+    if i[0] == movieID:
+        recommended = i[1]
+    else:
+        recommended = i[0]
+    nR = movieNames.loc[recommended,"title"]
+    print(nR,v["score"])
