@@ -62,7 +62,8 @@ def computeMoviePairSimilarities(fileName):
     
     sw.printTime("after read_table")
     df.info()
-    
+    print("\n Partitions {}".format(df.npartitions))
+    df = df.repartition(npartiotions = df.npartitions * 100)
     
     #joinedRatings
     df = df.join(df,lsuffix='_1', rsuffix='_2')
@@ -94,6 +95,8 @@ def computeMoviePairSimilarities(fileName):
     
     sw.printTime("after groupby")    
 
+    df = client.persist(df)
+
     totals = df["rating_xy"].count()
     #print(totals.head())
     
@@ -110,7 +113,8 @@ def computeMoviePairSimilarities(fileName):
     
     sw.printTime("after cosineSimilarity")
     
-    df = df.compute()
+    #df = df.compute()
+    df.to_csv('/path/to/data/export-*.csv', name_function=name) 
     sw.printTime("after compute")
     df.info()
     
