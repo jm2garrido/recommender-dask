@@ -22,6 +22,7 @@ from math import sqrt
 import time
 import dask.dataframe as dd
 from dask.distributed import Client
+import sqlite3
 
 def computeCosineSimilarity(ratingPairs):
     x = ratingPairs["rating_1"]
@@ -114,12 +115,27 @@ def computeMoviePairSimilarities(fileName):
     
     sw.printTime("after cosineSimilarity")
     
-    df.to_csv('export-*.csv') 
     df = df.compute()
     sw.printTime("after compute")
     df.info()
+    print(df.head())
     
     return df
+
+def moviePairsToSQL(conn,mps):
+    conn.execute('''CREATE TABLE IF NOT EXISTS moviePairs
+             (movie1 INTEGER, movie2 INTEGER, numPairs INTEGER, score REAL)''')
+    conn.execute('''DROP INDEX IF EXISTS idx_movie1;''')
+    conn.execute('''DROP INDEX IF EXISTS idx_movie2;''')
+    conn.execute('''CREATE INDEX idx_movie1 ON moviePairs(movie1);''')
+    conn.execute('''CREATE INDEX idx_movie2 ON moviePairs(movie2);''')
+    conn.commit()
+    
+    for i in mps.itertuples(name=None):
+        #print(i)
+        conn.execute('''INSERT INTO moviePairs(movie1,movie2,numPairs,score)
+VALUES(?,?,?,?);''',(i[0][0],i[0][1],i[2],i[1]))
+    conn.commit()
 
 
 #Main
@@ -132,13 +148,17 @@ if __name__ == "__main__":
     
     moviePairSimilarities = computeMoviePairSimilarities(fileRatings)
     
+    conn = sqlite3.connect('movieNamesDask.db')
+    moviePairsToSQL(conn,moviePairSimilarities)
+    conn.close()
+    
     #moviePairSimilarities.to_cvs("similarities.json")
     
     movieNames = pd.read_table(fileNames,names = ["movieID","title"],usecols = ["movieID","title"],
-                        sep ="::",index_col = "movieID", encoding = "cp1252")
-    movieNames.head()
+                        sep ="::",index_col = "movieID", encoding = "cp1252",engine="python")
+    #movieNames.head()
     
-    movieID = 50
+    movieID = 260 # star wars 
     scoreThreshold = 0.97
     coOccurenceThreshold = 50
     
