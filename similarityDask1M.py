@@ -64,7 +64,7 @@ def computeMoviePairSimilarities(fileName):
     sw.printTime("after read_table")
     df.info()
     print("\n Partitions {}".format(df.npartitions))
-    df = df.repartition(npartitions = df.npartitions * 100)
+    df = df.repartition(npartitions = df.npartitions * 80)
     
     #joinedRatings
     df = df.join(df,lsuffix='_1', rsuffix='_2')
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     moviePairSimilarities = computeMoviePairSimilarities(fileRatings)
     
     conn = sqlite3.connect('movieNamesDask.db')
-    moviePairsToSQL(conn,moviePairSimilarities)
+    #moviePairsToSQL(conn,moviePairSimilarities)
     conn.close()
     
     #moviePairSimilarities.to_cvs("similarities.json")
@@ -160,7 +160,8 @@ if __name__ == "__main__":
     
     movieID = 260 # star wars 
     scoreThreshold = 0.97
-    coOccurenceThreshold = 50
+    #coOccurenceThreshold = 50
+    coOccurenceThreshold = 1000
     
     filteredResults = moviePairSimilarities.query(
         "((movieID_1 == @movieID) or (movieID_1 == @movieID)) and (score>@scoreThreshold) and (numPairs>@coOccurenceThreshold)"
