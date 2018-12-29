@@ -111,3 +111,6 @@ movie-similarities-1m.py
 /movieNamesDask.db
 /ml-1m
 /dask-worker-space
+/ml-10M100K
+/ml-20m
+/movieNames1M.db
