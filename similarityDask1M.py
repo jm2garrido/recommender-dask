@@ -59,7 +59,7 @@ def computeMoviePairSimilarities(fileName):
     sw = stopWatch()
     
     df = dd.read_table(fileName,names = ["userID","movieID","rating","_"],usecols = ["userID","movieID","rating"],
-                    dtype = {"rating":np.float64}, sep ="::",engine="python").set_index("userID")
+                    dtype = {"rating":np.float64}, sep ="::",engine="python").set_index("userID", sorted = True)
     
     sw.printTime("after read_table")
     df.info()

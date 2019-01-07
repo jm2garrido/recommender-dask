@@ -20,10 +20,16 @@
 import sqlite3
 
 # Constants
-movieID = 2642
 scoreThreshold = 0.97
 coOccurenceThreshold = 500
 
+
+def getMovieFromFreeText(conn,text):
+    c = conn.cursor()
+    c.execute('''SELECT * 
+FROM searchablenames
+WHERE searchablenames.title MATCH ? ORDER BY rank;''',(text,))
+    return c.fetchall()
 
 def searchRecommendation(conn,movieID,scoreThreshold,coOccurenceThreshold):
     c = conn.cursor()
@@ -40,6 +46,28 @@ def getMovieFromID(conn,movieID):
 FROM movies
 WHERE movies.movieID=?;''',(movieID,))
     return c.fetchone()
+
+##### Main #####
+
+
+movieKeywords = input("Enter keywords for title searching  ")
+
+conn = sqlite3.connect('movieNames1M.db')
+
+listTitles = getMovieFromFreeText(conn,movieKeywords)
+
+conn.close()
+
+listTitles.insert(0,["None of this","",""])
+
+for n,i in enumerate(listTitles):
+    print("{} {} {} {}".format(n,i[1],i[0],i[2]))
+election = int(input("Choose one title    "))
+
+if election == 0:
+    quit()
+    
+movieID = listTitles[election][1]
 
 conn = sqlite3.connect('movieNamesDask.db')
 
