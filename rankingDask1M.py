@@ -79,26 +79,32 @@ if __name__ == "__main__":
     client = Client(processes=False)
     print(client)
     
-    fileRatings = "ml-1m/ratings.dat"
-    fileNames = "ml-1m/movies.dat"
-    m = 200
+    # for 1M
+    #fileRatings = "ml-1m/ratings.dat"
+    #fileNames =   "ml-1m/movies.dat"
+    #encoding = "cp1252"
+    
+    # for 10M
+    fileRatings = "ml-10M100K/ratings.dat"
+    fileNames =   "ml-10M100K/movies.dat"
+    encoding = "utf-8"
+    
+    m = 6000
     
     movieRankings = computeImdbRanking(fileRatings,m)
     
     movieRankings = movieRankings.sort_values("score", ascending = False)
     
-    print(movieRankings.head())
-    
-    #conn = sqlite3.connect('movieNamesDask.db')
-    #moviePairsToSQL(conn,moviePairSimilarities)
-    #conn.close()
-    
-    #moviePairSimilarities.to_cvs("similarities.json")
+    #print(movieRankings.head())
+    print(movieRankings.info())    
+
     
     movieNames = pd.read_table(fileNames,names = ["movieID","title"],usecols = ["movieID","title"],
-                        sep ="::",index_col = "movieID", encoding = "cp1252",engine="python")
+                        sep ="::",index_col = "movieID", encoding = encoding, engine="python")
     #movieNames.head()
-    print(movieRankings.info())
+    print(movieNames.info())        
+
+    
     
     for i,v in movieRankings.iloc[0:10].iterrows():
         print("{:f} {:f} {:d} {}".format(v["score"],v["R"],int(v["v"]),movieNames.loc[i,"title"]))
