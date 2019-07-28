@@ -58,7 +58,7 @@ def computeMoviePairSimilarities(fileName):
     
     sw = stopWatch()
     
-    df = dd.read_table(fileName,names = ["userID","movieID","rating","_"],usecols = ["userID","movieID","rating"],
+    df = dd.read_csv(fileName,names = ["userID","movieID","rating","_"],usecols = ["userID","movieID","rating"],
                     dtype = {"rating":np.float64}).set_index("userID")
     
     sw.printTime("after read_table")
@@ -115,7 +115,7 @@ VALUES(?,?,?,?);''',(i[0][0],i[0][1],i[2],i[1]))
 
 
 def searchMovie(moviePairSimilarities,fileNames, movieID = 50, scoreThreshold = 0.97, coOccurenceThreshold = 50):    
-    movieNames = pd.read_table(fileNames,names = ["movieID","title"],usecols = ["movieID","title"],
+    movieNames = pd.read_csv(fileNames,names = ["movieID","title"],usecols = ["movieID","title"],
                         sep ="|",index_col = "movieID", encoding = "cp1252")
     
     

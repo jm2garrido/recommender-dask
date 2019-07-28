@@ -39,7 +39,7 @@ def computeImdbRanking(fileName,m):
     
     sw = stopWatch()
     
-    df = dd.read_table(fileName,names = ["userID","movieID","rating","_"],usecols = ["movieID","rating"],
+    df = dd.read_csv(fileName,names = ["userID","movieID","rating","_"],usecols = ["movieID","rating"],
                     dtype = {"rating":np.float64}, sep ="::",engine="python").set_index("movieID")
     
     sw.printTime("after read_table")
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     print(movieRankings.info())    
 
     
-    movieNames = pd.read_table(fileNames,names = ["movieID","title"],usecols = ["movieID","title"],
+    movieNames = pd.read_csv(fileNames,names = ["movieID","title"],usecols = ["movieID","title"],
                         sep ="::",index_col = "movieID", encoding = encoding, engine="python")
     #movieNames.head()
     print(movieNames.info())        
